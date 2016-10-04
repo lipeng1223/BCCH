@@ -1,0 +1,523 @@
+    Ext.QuickTips.init();
+    
+    var tb = new Ext.Toolbar({
+        height:30
+        //style: 'background:transparent;border-color:transparent'
+        //style: 'background:#F0F4F5 url(/images/tbbg2.png) repeat-x scroll left top'
+    });
+    //tb.render('toolbarmenu');
+    tb.on("render", function(){
+    tb.addSpacer();
+    tb.addElement('bcinvtext');
+    tb.addSpacer();
+    tb.addSpacer();
+    tb.addSpacer();
+    tb.addSpacer();
+    tb.addSpacer();
+    tb.addSpacer();
+    tb.addSpacer();
+    tb.addSeparator();
+    var mainHomeMenu = new Ext.menu.Menu({
+        id: 'mainHomeMenu',
+        items: [
+            {
+                text: 'Home Page',
+                id: 'homePageMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainHomeMenu.hide();
+                    interPageMove('/secure/bookcountry/home.bc');
+                }
+            }, '-',
+            {
+                text: 'Back To Main Screen',
+                id: 'mainPageMenuItem',
+                icon: '/images/arrow_left.png',
+                handler: function(){
+                    mainHomeMenu.hide();
+                    interPageMove('/secure/home.bc');
+                }
+            }
+        ]
+    });
+    tb.add({
+        text:'Home',
+        <s:if test="#activeMenu == 'home'">cls: 'activeMenu',</s:if>
+        menu: mainHomeMenu
+    });
+    <s:if test="isBcInventoryAdmin || isBcInventoryViewer">
+    tb.addSeparator();
+    var mainInvMenu = new Ext.menu.Menu({
+        id: 'mainInvMenu',
+        items: [
+            {
+                text: 'Inventory List - Restricted False, Bell Book False',
+                id: 'inventoryListRestFMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    var str = "{filters:[{val:'false',col:'restricted',type:'boolean'},{val:'false',col:'bellbook',type:'boolean'}]}";
+                    interPageMove("/secure/bookcountry/inventoryitem!list.bc?defaultFilters="+escape(str));
+                }
+            },
+            {
+                text: 'Inventory List - Restricted True, Bell Book True',
+                id: 'inventoryListRestTMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    var str = "{filters:[{val:'true',col:'restricted',type:'boolean'},{val:'true',col:'bellbook',type:'boolean'}]}";
+                    interPageMove("/secure/bookcountry/inventoryitem!list.bc?defaultFilters="+escape(str));
+                }
+            },
+            {
+                text: 'Inventory List - Higher Education False',
+                id: 'inventoryListHeFMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    var str = "{filters:[{val:'false',col:'he',type:'boolean'}]}";
+                    interPageMove("/secure/bookcountry/inventoryitem!list.bc?defaultFilters="+escape(str));
+                }
+            },
+            {
+                text: 'Inventory List - Higher Education True',
+                id: 'inventoryListHeTMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    var str = "{filters:[{val:'true',col:'he',type:'boolean'}]}";
+                    interPageMove("/secure/bookcountry/inventoryitem!list.bc?defaultFilters="+escape(str));
+                }
+            },
+            {
+                text: 'Inventory List - All',
+                id: 'inventoryListAllMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    interPageMove("/secure/bookcountry/inventoryitem!list.bc?");
+                }
+            },
+            {
+                text: 'Inventory Search',
+                id: 'inventorySearchMenuItem',
+                icon: '/images/zoom.png',
+                handler: function(){
+                    Ext.Updater.defaults.loadScripts = true;
+                    if (Ext.getCmp("invsearchwindow") == undefined){
+                        Ext.invSearchWindow = new Ext.Window({
+                            id: 'invsearchwindow',
+                            title: 'Inventory Search',
+                            width:650,
+                            height:200,
+                            minWidth:650,
+                            minHeight:200,
+                            modal:false,
+                            stateful:false,
+                            autoScroll:true,
+                            bbar:[],
+                            bodyStyle:'background-color:#fbfbfb',
+                            autoLoad: 'inventoryitem!searchWin.bc'
+                        });
+                    }
+                    Ext.invSearchWindow.show();                    
+                    
+                }
+            },
+            {
+                text: 'Inventory Multi Isbn Search',
+                id: 'inventoryMultiSearchMenuItem',
+                icon: '/images/zoom.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    interPageMove('/secure/bookcountry/inventoryitem!multiSearch.bc');
+                }
+            }
+            <s:if test="isBcBackStockAdmin || isBcBackStockViewer">
+            , '-', 
+            {
+                text: 'Back Stock List',
+                id: 'backStockListMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    interPageMove("/secure/bookcountry/backstock!list.bc");
+                }
+            }
+            <s:if test="isBcBackStockAdmin">
+            ,{
+                text: 'Back Stock Import',
+                id: 'backStockImportMenuItem',
+                icon: '/images/cog.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    interPageMove('/secure/bookcountry/backstock!uploadPage.bc');
+                }
+            }
+            </s:if>
+            </s:if>
+            <s:if test="isBcInventoryAdmin">
+            , '-', 
+            {
+                text: 'Inventory Tools',
+                id: 'inventoryToolsMenuItem',
+                icon: '/images/cog.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    interPageMove('/secure/bookcountry/inventorytools.bc');
+                }
+            }
+            </s:if>
+            , '-',
+            {
+                text: 'Inventory Item Bin Updates',
+                id: 'inventoryItemBinUpdatesMenuItem',
+                icon: '/images/cog.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    interPageMove('/secure/bookcountry/inventoryaudit!list.bc');
+                }
+            },
+            {
+                text: 'Inventory Marketing Generator',
+                id: 'inventoryMarketingMenuItem',
+                icon: '/images/page_white_word.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    interPageMove('/secure/bookcountry/inventorytools!marketing.bc');
+                }
+            }
+        ]
+    });
+    tb.add({
+        text:'Inventory',
+        <s:if test="#activeMenu == 'inventory'">cls: 'activeMenu',</s:if>
+        menu: mainInvMenu
+    });
+    </s:if>
+    <s:if test="isBcOrderAdmin || isBcOrderViewer">
+    tb.addSeparator();
+    var mainOrderMenu = new Ext.menu.Menu({
+        id: 'mainOrderMenu',
+        items: [
+            {
+                text: 'Order List',
+                id: 'orderListMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainOrderMenu.hide();
+                    interPageMove('/secure/bookcountry/order!list.bc');
+                }
+            },
+            {
+                text: 'Order Search',
+                id: 'orderSearchMenuItem',
+                icon: '/images/zoom.png',
+                handler: function(){                    
+                    Ext.Updater.defaults.loadScripts = true;
+                        if (Ext.getCmp("ordersearchwindow") == undefined){
+                            Ext.orderSearchWindow = new Ext.Window({
+                                id: 'ordersearchwindow',
+                                title: 'Order Search',
+                                width:650,
+                                height:200,
+                                minWidth:650,
+                                minHeight:200,
+                                modal:false,
+                                stateful:false,
+                                autoScroll:true,
+                                bbar:[],
+                                bodyStyle:'background-color:#fbfbfb',
+                                autoLoad: 'order!searchWin.bc'
+                            });
+                        }
+                        Ext.orderSearchWindow.show();                    
+                }
+            },
+            {
+                text: 'Order Multi Isbn Search',
+                id: 'orderMultiSearchMenuItem',
+                icon: '/images/zoom.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    interPageMove('/secure/bookcountry/order!multiSearch.bc');
+                }
+            },
+            {
+                text: 'Sale Search',
+                id: 'orderSaleSearchMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainInvMenu.hide();
+                    interPageMove('/secure/bookcountry/order!bestSeller.bc');
+                }
+            },
+            <s:if test="isBcOrderAdmin">
+            '-',
+            {
+                text: 'Create New Order',
+                id: 'orderCreateMenuItem',
+                icon: '/images/accept.png',
+                handler: createOrderButtonClick
+            },
+            '-',
+            {
+                text: 'Email Order Invoices',
+                id: 'orderEmailMenuItem',
+                icon: '/images/email.png',
+                handler: function(){
+                    mainOrderMenu.hide();
+                    interPageMove("/secure/bookcountry/orderinvoiceemail!email.bc");
+                }
+            },
+            </s:if>
+            '-',
+            {text:'Filtered Order Lists', disabled:true},
+            {
+                text: 'Not Posted',
+                id: 'unpostedOrderListMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainOrderMenu.hide();
+                    interPageMove("/secure/bookcountry/order!list.bc?defaultFilters=%7Bfilters%3A%5B%7Bval%3Afalse%2C%20col%3A'posted'%7D%5D%7D");
+                }
+            },
+            {
+                text: 'Posted',
+                id: 'postedOrderListMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainOrderMenu.hide();
+                    interPageMove("/secure/bookcountry/order!list.bc?defaultFilters=%7Bfilters%3A%5B%7Bval%3Atrue%2C%20col%3A'posted'%7D%5D%7D");
+                }
+            },
+            {
+                text: 'Shipped Last Month',
+                id: 'lastMonthOrderListMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainOrderMenu.hide();
+                    var after = new Date().add(Date.MONTH, -1).getFirstDateOfMonth().add(Date.DAY, -1).clearTime();
+                    var before = new Date().getFirstDateOfMonth().clearTime();
+                    //console.log("before: "+before.format("m/d/Y"));
+                    //console.log("after: "+after.format("m/d/Y"));
+                    var str = "{filters:[{val:{after:'"+after.format("m/d/Y")+"',before:'"+before.format("m/d/Y")+"'},col:'shipDate'}]}";
+                    interPageMove("/secure/bookcountry/order!list.bc?defaultFilters="+escape(str));
+                }
+            }
+            
+        ]
+    });
+    tb.add({
+        <s:if test="#activeMenu == 'orders'">cls: 'activeMenu',</s:if>
+        text: 'Orders',
+        menu: mainOrderMenu
+    });
+    </s:if>
+    <s:if test="isBcReceivingAdmin || isBcReceivingViewer">
+    tb.addSeparator();
+    var mainRecMenu = new Ext.menu.Menu({
+        id: 'mainRecMenu',
+        items: [
+            {
+                text: 'Receiving List',
+                id: 'recListMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainRecMenu.hide();
+                    interPageMove('/secure/bookcountry/receiving!list.bc');
+                }
+            },
+            {
+                text: 'Receiving Search',
+                id: 'recSearchMenuItem',
+                icon: '/images/zoom.png',
+                handler: function(){
+                    Ext.Updater.defaults.loadScripts = true;
+                    if (Ext.getCmp("recsearchwindow") == undefined){
+                        Ext.recSearchWindow = new Ext.Window({
+                            id: 'recsearchwindow',
+                            title: 'Receiving Search',
+                            width:650,
+                            height:200,
+                            minWidth:650,
+                            minHeight:200,
+                            modal:false,
+                            stateful:false,
+                            autoScroll:true,
+                            bbar:[],
+                            bodyStyle:'background-color:#fbfbfb',
+                            autoLoad: 'receiving!searchWin.bc'
+                        });
+                    }
+                    Ext.recSearchWindow.show();                    
+                    
+                }
+            },
+            <s:if test="isBcReceivingAdmin">
+            '-',
+            {
+                text: 'Create New Receiving',
+                id: 'recCreateMenuItem',
+                icon: '/images/accept.png',
+                handler: createRecButtonClick
+            },
+            </s:if>
+            '-',
+            {text:'Filtered Receiving Lists', disabled:true},
+            {
+                text: 'Not Posted',
+                id: 'unpostedRecListMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainOrderMenu.hide();
+                    interPageMove("/secure/bookcountry/receiving!list.bc?defaultFilters=%7Bfilters%3A%5B%7Bval%3Afalse%2C%20col%3A'posted'%7D%5D%7D");
+                }
+            },
+            {
+                text: 'Posted',
+                id: 'postedRecListMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainOrderMenu.hide();
+                    interPageMove("/secure/bookcountry/receiving!list.bc?defaultFilters=%7Bfilters%3A%5B%7Bval%3Atrue%2C%20col%3A'posted'%7D%5D%7D");
+                }
+            }
+        ]
+    });
+    tb.add({
+        <s:if test="#activeMenu == 'receiving'">cls: 'activeMenu',</s:if>
+        text: 'Receiving',
+        menu: mainRecMenu
+    });
+    </s:if>
+    <s:if test="isBcInventoryAdmin || isBcInventoryViewer">
+    tb.addSeparator();
+    var mainManMenu = new Ext.menu.Menu({
+        id: 'mainManMenu',
+        items: [
+            {
+                text: 'Manifest List',
+                id: 'manListMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainManMenu.hide();
+                    interPageMove('/secure/bookcountry/manifest!list.bc');
+                }
+            },
+            {
+                text: 'Manifest Search',
+                id: 'manSearchMenuItem',
+                icon: '/images/zoom.png',
+                handler: function(){
+                    Ext.Updater.defaults.loadScripts = true;
+                    if (Ext.getCmp("mansearchwindow") == undefined){
+                        Ext.manSearchWindow = new Ext.Window({
+                            id: 'mansearchwindow',
+                            title: 'Manifest Search',
+                            width:650,
+                            height:200,
+                            minWidth:650,
+                            minHeight:200,
+                            modal:false,
+                            stateful:false,
+                            autoScroll:true,
+                            bbar:[],
+                            bodyStyle:'background-color:#fbfbfb',
+                            autoLoad: 'manifest!searchWin.bc'
+                        });
+                    }
+                    Ext.manSearchWindow.show();                    
+                    
+                }
+            }
+        ]
+    });
+    tb.add({
+        <s:if test="#activeMenu == 'manifests'">cls: 'activeMenu',</s:if>
+        text: 'Manifests',
+        menu: mainManMenu
+    });
+    </s:if>
+    <s:if test="isBcCustomerAdmin || isBcCustomerViewer">
+    tb.addSeparator();
+    var mainCustMenu = new Ext.menu.Menu({
+        id: 'mainCustMenu',
+        items: [
+            {
+                text: 'Customer List',
+                id: 'custListMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainCustMenu.hide();
+                    interPageMove('/secure/bookcountry/customer!list.bc');
+                }
+            }
+        ]
+    });
+    tb.add({
+        <s:if test="#activeMenu == 'customers'">cls: 'activeMenu',</s:if>
+        text: 'Customers',
+        menu: mainCustMenu
+    });
+    </s:if>
+    <s:if test="isBcVendorAdmin || isBcVendorViewer">
+    tb.addSeparator();
+    var mainVendMenu = new Ext.menu.Menu({
+        id: 'mainVendMenu',
+        items: [
+            {
+                text: 'Vendor List',
+                id: 'vendListMenuItem',
+                icon: '/images/table.png',
+                handler: function(){
+                    mainVendMenu.hide();
+                    interPageMove('/secure/bookcountry/vendor!list.bc');
+                }
+            }
+        ]
+    });
+    tb.add({
+        <s:if test="#activeMenu == 'vendors'">cls: 'activeMenu',</s:if>
+        text: 'Vendors',
+        menu: mainVendMenu
+    });
+    </s:if>
+    tb.addFill();
+    tb.addSpacer();
+    tb.addText("user: <% if (request.getUserPrincipal().getName().length() > 50){ %><%= request.getUserPrincipal().getName().substring(0, 50) %>... <% } else { %><%= request.getUserPrincipal().getName() %><% } %>");
+    tb.addSpacer();
+    tb.addSeparator();
+    tb.addElement("logoutspan");
+    tb.addSpacer();
+    tb.addSeparator();
+    tb.addSpacer();
+    tb.addSpacer();
+    });
+    
+    <!-- This is to fix the icon offset in menu drop downs in IE6 -->    
+    if (Ext.isIE6){
+        if (document.styleSheets[document.styleSheets.length-1].rules) {
+            document.styleSheets[document.styleSheets.length-1].addRule(".x-menu-item-icon", "background-position:center left;left:-25px;"); 
+        }
+    }
+    
+    <s:if test="search != null && search.names != null && search.names.length > 0">
+    searchRowNum += <s:property value="search.names.length"/>;
+    </s:if>
+
+    var quicksearchbar = new Ext.Panel({
+        layout: 'fit',
+        contentEl: 'quicksearchmenudiv',
+        border:false,
+        bodyBorder:false
+    });
+
+    var headermenu = new Ext.Panel({
+        layout:'fit',
+        tbar: tb,
+        items: [quicksearchbar]
+    });
+    
+    

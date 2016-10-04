@@ -1,0 +1,15 @@
+set password [lrange $argv 0 0]
+set command [lrange $argv 1 1]
+set arg1 [lrange $argv 2 2]
+set arg2 [lrange $argv 3 end]
+puts "command: $command"
+puts "arg1: $arg1"
+puts "arg2: $arg2"
+set timeout -1
+spawn $command $arg1 "$arg2"
+match_max 100000
+expect "*?assword:*"
+puts "\rsending password..."
+send -- "$password\r"
+puts "\r******************************* Running remote command, wait... **********************************"
+expect eof

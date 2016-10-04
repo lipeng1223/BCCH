@@ -1,0 +1,913 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="bookcountry" default="help" basedir=".">
+
+    <!--
+    ###########         Properties and Tasks      ############################
+    -->
+    <!-- Override user.name for other properties to be loaded with a -Duser.name=blah -->
+    <echo message="using properties for user.name: ${user.name} loading prop file: properties/${user.name}.properties"/>
+    <property file="properties/${user.name}.properties"/>
+    
+    <import file="build-properties.xml"/>
+    <import file="build-paths.xml"/>
+    <import file="build-macros.xml"/>
+    
+    <taskdef name="hibernatetool" classname="org.hibernate.tool.ant.HibernateToolTask" classpathref="hibtoolspath" />
+    
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath>
+            <pathelement location="${lib.ant}/ant-contrib-1.0b3.jar"/>
+        </classpath>
+    </taskdef>
+
+    <taskdef name="jrc" classname="net.sf.jasperreports.ant.JRAntCompileTask">
+        <classpath>
+            <fileset dir="${lib.jasper}">
+                <include name="*.jar"/>
+            </fileset>
+            <fileset dir="${lib.commons}">
+                <include name="*.jar"/>
+            </fileset>
+        </classpath>
+    </taskdef>
+    
+    <taskdef name="query" classname="com.jera.anttasks.Query">    
+        <classpath>
+            <fileset dir="${lib.ant}">
+                <include name="Jera*.jar"/>
+            </fileset>
+        </classpath>
+    </taskdef>
+            
+    <tstamp>
+       <format property="build.time" pattern="dd.MMM.yyyy HH.mm.ss z" />
+    </tstamp>
+    <tstamp>
+       <format property="build.date" pattern="MM-dd-yy" />
+    </tstamp>
+    
+    <!--
+    ###########         Clean / Init / Help      ############################
+    -->
+    <target name="help" description="Ant build help.">
+        <exec dir="${basedir}" executable="ant">
+            <arg line="-projecthelp"/>
+        </exec>
+    </target>
+    
+    <target name="clean" description="Clean the build.">
+        <delete dir="${build}" failonerror="false"/>
+        <delete dir="${target}" failonerror="false"/>
+    </target>
+    
+    <target name="dds" description="Meta - Destroy, Deploy, Start">
+        <runtarget target="destroy"/>
+        <runtarget target="deploy"/>
+        <runtarget target="start"/>
+    </target>
+
+    <target name="hd" description="Meta - Hotdeploy">
+        <runtarget target="hotdeploy"/>
+    </target>
+    
+    <target name="asd" description="Meta - Applyschemadiff">
+        <runtarget target="applyschemadiff"/>
+    </target>
+    
+    <target name="destroy" description="Destroys the deployed code directory." depends="clean">
+        <delete dir="${jboss.container}/server/inventory" failonerror="false"/>
+        <delete dir="${hibernate.search.index}" failonerror="false"/>
+        <delete dir="${export.file.store}" failonerror="false"/>
+        <delete dir="${inventory.file.store}" failonerror="false"/>
+        <delete dir="${ehcache.disk.store}" failonerror="false"/>
+        <mkdir dir="${ehcache.disk.store}"/>
+        <mkdir dir="${export.file.store}"/>
+        <mkdir dir="${inventory.file.store}"/>
+    </target>
+
+    <target name="appversion" description="Sets up the app version properties for the build">
+        <!-- app version that will go into the footer -->
+        <property name="app.version" value="${release.version} ${release.name}"/>
+        <property name="app.build" value="${release.version} ${build.date}"/>
+        <echo message="App Version: ${app.version}"/>
+        <echo message="App Build: ${app.build}"/>
+    </target>
+    
+    <target name="init" description="Initializes the dirs.">
+        <mkdir dir="${build}"/>
+        <mkdir dir="${build.src}"/>
+        <mkdir dir="${build.www}"/>
+        <mkdir dir="${build.classes}"/>
+        <mkdir dir="${build.drop}"/>
+        <mkdir dir="${target}"/>
+        <mkdir dir="${target.jar}"/>
+        <mkdir dir="${target.war}"/>
+        <mkdir dir="${target.ear}"/>
+        <mkdir dir="${ehcache.disk.store}"/>
+        <mkdir dir="${export.file.store}"/>
+        <copy file="${props}/filter.properties" todir="${build.src}" overwrite="true">
+            <filterchain> 
+                <expandproperties/>
+                <replacestring from="\" to="\\" />
+            </filterchain>
+        </copy>
+        <filter filtersfile="${build.src}/filter.properties"/>
+        <copy file="${main.resources}/hibernate.cfg.xml" tofile="${build.src}/hibernate.cfg.xml" filtering="true" overwrite="true" />
+    </target>
+    
+    <!--
+    ###########         Compile      ############################
+    -->
+    <target name="compile" description="Compiles all of the code." depends="init">
+        <javac srcdir="${main.java}"
+               destdir="${build.classes}"
+               debug="${javac.debug}"
+               debuglevel="${javac.debug.level}"
+               deprecation="${javac.deprecation}"
+               optimize="${javac.optimize}"
+               includes="com/bc/**/*.java"
+               includeantruntime="true">
+            <classpath refid="build.classpath"/>
+        </javac>
+    </target>
+        
+    
+    
+    
+    <!--
+    ###########         JAR, WAR, EAR      ############################
+    -->
+    <target name="jar" description="Creates any jars." depends="compile">
+        <mkdir dir="${build.classes}/META-INF"/>
+        <copy file="${main.resources}/persistence.xml" todir="${build.classes}/META-INF" filtering="true" overwrite="true"/>
+        <jar destfile="${target.jar}/orm.jar">
+            <fileset dir="${build.classes}" 
+                     includes="com/bc/orm/**
+                               com/bc/dao/**
+                               META-INF/*"/>
+        </jar>
+        <delete dir="${build.classes}/META-INF"/>
+        <jar destfile="${target.jar}/ejb.jar">
+            <fileset dir="${build.classes}" 
+                     includes="com/bc/ejb/**"/>
+        </jar>
+        <jar destfile="${target.jar}/util.jar">
+            <fileset dir="${build.classes}" 
+                     includes="com/bc/util/**
+                               com/bc/enums/**
+                               com/bc/exception/**"/>
+        </jar>
+        <jar destfile="${target.jar}/excel.jar">
+            <fileset dir="${build.classes}" 
+                     includes="com/bc/excel/**"/>
+        </jar>
+        <jar destfile="${target.jar}/table.jar">
+            <fileset dir="${build.classes}" 
+                     includes="com/bc/table/**"/>
+        </jar>
+        <jar destfile="${target.jar}/struts.jar">
+            <fileset dir="${build.classes}" 
+                     includes="com/bc/struts/*.class"/>
+        </jar>
+        <jar destfile="${target.jar}/amazon.jar">
+            <fileset dir="${build.classes}" 
+                     includes="com/bc/amazon/**"/>
+        </jar>
+    </target>
+    
+    <target name="war" description="Creates any wars." depends="appversion,jar">
+        
+        <copy file="${main.webapps.inventory}/web-inf/jawr.properties" tofile="${build.src}/jawr.properties" filtering="true" overwrite="true" />
+        <copy file="${main.webapps.inventory}/web-inf/web.xml" tofile="${build.src}/web.xml" filtering="true" overwrite="true" />
+        <mkdir dir="${build.src}/jsp"/>
+        <copy file="${main.webapps.inventory}/jsp/div-footer.jspf" tofile="${build.src}/jsp/div-footer.jspf" filtering="true" overwrite="true" />
+        <copy file="${main.webapps.inventory}/jsp/div-footer-noviewport.jspf" tofile="${build.src}/jsp/div-footer-noviewport.jspf" filtering="true" overwrite="true" />
+        <copy file="${main.webapps.inventory}/jsp/html-head.jspf" tofile="${build.src}/jsp/html-head.jspf" filtering="true" overwrite="true" />
+        
+        <mkdir dir="${build.src}/breakclient"/>
+        <copy file="${main}/breakclient/web/breakroom.jnlp" tofile="${build.src}/breakclient/breakroom.jnlp" filtering="true" overwrite="true" >
+            <filterset><filter token="codebase" value="${breakclient.codebase}"/></filterset>
+        </copy>
+        <war destfile="${target.war}/inventory.war" 
+             webxml="${build.src}/web.xml">
+            <webinf dir="${main.webapps.inventory}/web-inf">
+                <include name="jboss-web.xml"/>
+                <include name="resources/**"/>
+            </webinf>
+            <classes dir="${main.webapps.inventory}/web-inf">
+                <include name="struts.xml" />
+            </classes>
+            <classes dir="${main.reports}">
+                <include name="*" />
+            </classes>
+            <classes dir="${build.classes}">
+                <include name="com/bc/listener/*.class" />
+                <include name="com/bc/struts/**" />
+                <include name="com/bc/jasper/**" />
+                <include name="com/bc/servlet/**" />
+                <include name="com/bc/actions/**" />
+                <include name="com/bc/socketserver/**"/>
+                <exclude name="com/bc/struts/*.class" />
+            </classes>
+            <lib dir="${lib}" includes="jawr*.jar"/>
+            <lib dir="${lib.struts}" includes="*"/>
+            <!-- <lib dir="${lib.amazon}" includes="AWSE*" /> -->
+            <lib dir="${lib.jasper}" includes="*.jar"/>
+            <lib dir="${lib.barbecue}" includes="*.jar"/>
+            <lib dir="${lib.jfree}" includes="jcommon*.jar
+                                              jfreechart*.jar"/>
+            <lib dir="${lib.commons}" includes="commons-collections*.jar
+                                                commons-fileupload*.jar
+                                                commons-io*.jar"/>
+            <manifest>
+                <attribute name="Product-Name"      value="inventory"/>
+                <attribute name="Product-Version"   value="${app.build}"/>
+                <attribute name="Build-Date"        value="${build.time}"/>
+                <attribute name="Build-JDK-Vendor"  value="${java.vendor}"/>
+                <attribute name="Build-JDK-Version" value="${java.version}"/>
+                <attribute name="Build-OS-Name"     value="${os.name}"/>
+                <attribute name="Build-OS-Version"  value="${os.version}"/>
+                <attribute name="Build-User"        value="${user.name}"/>
+            </manifest>            
+            
+            <fileset dir="${main.webapps.inventory}">
+                <include name="templates/**/*"/>
+            </fileset>
+            <fileset dir="${main.webapps.inventory}">
+                <include name="css/**/*"/>
+            </fileset>
+            <fileset dir="${main.webapps.inventory}">
+                <include name="images/**/*"/>
+            </fileset>
+            <fileset dir="${main.webapps.inventory}">
+                <include name="js/**/*"/>
+            </fileset>
+            <fileset dir="${main.webapps.inventory}">
+                <include name="audio/**/*"/>
+            </fileset>
+            <fileset dir="${main.webapps.inventory}/jsp">
+                <include name="homeredirect.bc"/>
+            </fileset>
+            <fileset dir="${main.webapps.inventory}">
+                <include name="html/**/*"/>
+            </fileset>
+            <!-- breakclient -->
+            <fileset dir="${main}">
+                <include name="breakclient/*.jar"/>
+                <include name="breakclient/lib/**"/>
+                <include name="breakclient/*.xml"/>
+            </fileset>
+            <fileset dir="${build.src}">
+                <include name="breakclient/*.jnlp"/>
+            </fileset>
+            <webinf dir="${main.webapps.inventory}/">
+                <include name="tags/*"/>
+            </webinf>
+            <webinf dir="${main.webapps.inventory}/">
+                <include name="jsp/**/*"/>
+                <exclude name="jsp/div-footer*.jspf"/>
+                <exclude name="jsp/html-head.jspf"/>
+            </webinf>
+            <webinf dir="${build.src}/">
+                <include name="jsp/div-footer*.jspf"/>
+                <include name="jsp/html-head.jspf"/>
+            </webinf>
+            <webinf dir="${build.src}/">
+                <include name="jawr.properties"/>
+            </webinf>
+        </war>
+        <delete file="${build.src}/*jawr.properties"/>
+    </target>
+    
+    <target name="ear" description="Creates any ears." depends="war">
+        <!-- populate the lib dir -->
+        <delete dir="${target.ear}/inventory"/>
+        <mkdir dir="${target.ear}/inventory"/>
+        <mkdir dir="${target.ear}/inventory/lib"/>
+        <copy todir="${target.ear}/inventory/lib">
+            <fileset dir="${lib}" includes="json*.jar,
+                                            pjl-comp*.jar,
+                                            jconfig*.jar"/>
+            <fileset dir="${lib.jxl}" includes="jxl*.jar"/>
+            <fileset dir="${lib.poi}" includes="*.jar" />
+            <fileset dir="${lib.commons}" includes="*.jar" excludes="commons-logging*"/>
+            <fileset dir="${lib.ehcache}" includes="*.jar"/>
+            <fileset dir="${target.jar}" includes="util.jar"/>
+            <fileset dir="${target.jar}" includes="excel.jar"/>
+            <fileset dir="${target.jar}" includes="struts.jar"/>
+            <fileset dir="${target.jar}" includes="table.jar"/>
+        </copy>
+            
+        <copy file="${main.resources}/inventory-ds.xml" 
+            tofile="${build.src}/inventory-ds.xml" filtering="true" overwrite="true" />
+        <copy file="${main.resources}/ehcache.xml" 
+            tofile="${build.src}/ehcache.xml" filtering="true" overwrite="true" />
+        
+        <ear earfile="${target.ear}/inventory.ear" 
+             appxml="${main.resources}/application.xml">
+            <metainf dir="${main.resources}">
+                <include name="jboss-app.xml" />
+            </metainf>
+            <fileset dir="${target.ear}/inventory"  includes="lib/**"/>
+            <fileset dir="${build.src}" includes="inventory-ds.xml,ehcache.xml" />
+            <fileset dir="${target.war}" includes="inventory.war" />
+            <fileset dir="${target.jar}" includes="ejb.jar" />
+            <fileset dir="${target.jar}" includes="orm.jar" />
+            <manifest>
+                <attribute name="Product-Name"      value="inventory"/>
+                <attribute name="Product-Version"   value="${app.build}"/>
+                <attribute name="Build-Date"        value="${build.time}"/>
+                <attribute name="Build-JDK-Vendor"  value="${java.vendor}"/>
+                <attribute name="Build-JDK-Version" value="${java.version}"/>
+                <attribute name="Build-OS-Name"     value="${os.name}"/>
+                <attribute name="Build-OS-Version"  value="${os.version}"/>
+                <attribute name="Build-User"        value="${user.name}"/>
+           </manifest>
+        </ear>
+        <delete dir="${target.ear}/inventory"/>
+    </target>
+    
+    
+    
+    <!--
+    ###########         Deploy      ############################
+    -->
+    <target name="deploy" description="Deploys the ears and the server to jboss." depends="ear">
+        <copy todir="${jboss.container}/server">
+            <fileset dir="${jboss}" includes="inventory/**"/>
+        </copy>
+        <copy tofile="${jboss.container}/server/inventory/conf/jboss-log4j.xml" 
+              file="${jboss}/inventory/conf/jboss-log4j.xml" 
+              overwrite="true" filtering="true"/>
+        <copy tofile="${jboss.container}/server/inventory/deploy/jboss-web.deployer/server.xml" 
+              file="${jboss}/inventory/deploy/jboss-web.deployer/server.xml" 
+              overwrite="true" filtering="true"/>
+        <copy tofile="${jboss.container}/server/inventory/conf/jboss-service.xml" 
+              file="${jboss}/inventory/conf/jboss-service.xml" 
+              overwrite="true" filtering="true"/>
+        <copy tofile="${jboss.container}/server/inventory/deploy/ejb3.deployer/META-INF/jboss-service.xml" 
+              file="${jboss}/inventory/deploy/ejb3.deployer/META-INF/jboss-service.xml" 
+              overwrite="true" filtering="true"/>
+        <copy tofile="${jboss.container}/server/inventory/deploy/jms/uil2-service.xml" 
+              file="${jboss}/inventory/deploy/jms/uil2-service.xml" 
+              overwrite="true" filtering="true"/>
+
+        <!-- amazon jar has to be in the inventory lib -->
+        <copy todir="${jboss.container}/server/inventory/lib">
+            <fileset dir="${lib.amazon}" includes="*.jar"/>
+            <fileset dir="${target.jar}" includes="amazon.jar" />
+            <fileset dir="${lib}" includes="gson*.jar" />
+        </copy>
+        
+        <if>
+            <equals arg1="${explode.deployment}" arg2="true"/>
+            <then>
+                <unjar src="${target.ear}/inventory.ear" dest="${target.ear}/inventory.ear.exploded" overwrite="true"/>
+                <foreach target="unjardeployfile" param="file">
+                    <path>
+                        <fileset dir="${target.ear}/inventory.ear.exploded" 
+                                 includes="*.jar,*.war"/>
+                    </path>
+                </foreach>
+                <delete dir="${jboss.deploy}/inventory.ear" failonerror="false"/>
+                <move file="${target.ear}/inventory.ear.exploded" tofile="${jboss.deploy}/inventory.ear"/>
+            </then>
+            <else>
+                <copy file="${target.ear}/inventory.ear" todir="${jboss.deploy}" overwrite="true" />
+            </else>
+        </if>
+        <!-- copy the config file into place -->
+        <copy file="${main.resources}/inventory_config.xml" todir="${jboss.conf}" overwrite="true" filtering="true" />
+    </target>
+    
+    <target name="hotdeploy" description="Hotdeploys the jsp's, css, js, and images to jboss.">
+        <if>
+            <equals arg1="${explode.deployment}" arg2="true"/>
+            <then>
+                <copy todir="${jboss.container}/server/inventory/deploy/inventory.ear/inventory.war">
+                    <fileset dir="${main.webapps.inventory}">
+                        <include name="templates/**/*"/>
+                        <include name="css/**/*"/>
+                        <include name="js/**/*"/>
+                        <include name="images/**/*"/>
+                        <include name="html/**/*"/>
+                    </fileset>
+                </copy>
+                <copy todir="${jboss.container}/server/inventory/deploy/inventory.ear/inventory.war/WEB-INF">
+                    <fileset dir="${main.webapps.inventory}/">
+                        <include name="tags/*"/>
+                    </fileset>
+                    <fileset dir="${main.webapps.inventory}/">
+                        <include name="jsp/**/*"/>
+                    </fileset>
+                </copy>
+                <if>
+                    <equals arg1="${rebel.enabled}" arg2="true"/>
+                    <then>
+                        <runtarget target="hotclasses"/>
+                    </then>
+                </if>
+            </then>
+            <else>
+                <echo message="You do not have an exploded deployment."/>
+            </else>
+        </if>
+    </target>
+
+    <!--
+    ###########         Drop      ############################
+    -->
+    <target name="drop" description="Create a deployment drop zip file.  For Production use -Duser.name=jboss" depends="clean, ear, schemaddl">
+        <mkdir dir="${build.drop}/temp"/>
+        <!-- <mkdir dir="${build.drop}/temp/${jboss.server.name}-${release.version}migration"/> -->
+        <copy todir="${build.drop}/temp">
+            <fileset dir="${jboss}" includes="inventory/**"/>
+        </copy>
+        <copy todir="${build.drop}/temp/inventory/lib">
+            <fileset dir="${target.jar}" includes="amazon.jar" />
+            <fileset dir="${lib}" includes="gson*.jar" />
+            <fileset dir="${lib.amazon}" includes="*.jar"/>
+        </copy>
+        <copy tofile="${build.drop}/temp/inventory/deploy/jboss-web.deployer/server.xml" 
+              file="${jboss}/inventory/deploy/jboss-web.deployer/server.xml" 
+              overwrite="true" filtering="true"/>
+        <copy tofile="${build.drop}/temp/inventory/conf/jboss-log4j.xml" 
+              file="${jboss}/inventory/conf/jboss-log4j.xml" 
+              overwrite="true" filtering="true"/>
+        <copy tofile="${build.drop}/temp/inventory/conf/jboss-service.xml" 
+              file="${jboss}/inventory/conf/jboss-service.xml" 
+              overwrite="true" filtering="true"/>
+        <copy tofile="${build.drop}/temp/inventory/deploy/ejb3.deployer/META-INF/jboss-service.xml" 
+              file="${jboss}/inventory/deploy/ejb3.deployer/META-INF/jboss-service.xml" 
+              overwrite="true" filtering="true"/>
+        <copy tofile="${build.drop}/temp/inventory/deploy/jms/uil2-service.xml" 
+              file="${jboss}/inventory/deploy/jms/uil2-service.xml" 
+              overwrite="true" filtering="true"/>
+        
+        <!-- 
+        <copy todir="${build.drop}/temp/${jboss.server.name}-${release.version}migration" overwrite="true">
+            <fileset dir="${main.sql}/${release.name}" includes="*"/>
+            <fileset dir="${build.src}" includes="schema.sql"/>
+        </copy>
+         -->
+        <copy file="${target.ear}/inventory.ear" todir="${build.drop}/temp/inventory/deploy" overwrite="true" />
+        <copy file="${main.resources}/inventory_config.xml" todir="${build.drop}/temp/inventory/conf" overwrite="true" filtering="true" />
+        <move file="${build.drop}/temp/inventory" tofile="${build.drop}/temp/${jboss.server.name}"></move>
+        <zip destfile="${build.drop}/inventory-${release.version}-${build.date}.zip">
+            <fileset dir="${build.drop}/temp">
+                <include name="**"/>
+            </fileset>
+        </zip>
+        <delete dir="${build.drop}/temp" failonerror="false"/>
+    </target>
+    
+
+    <!--
+    ###########         Generate Schema Update DDL's      ############################
+    <target name="generateschemaupdates" description="Generates the schema update ddl's for production.  Puts them into src/main/sql.">
+        <echo message="Generating schema sql for production..."/>
+        <runtarget target="loadproduction"/>
+        <runtarget target="schemadiff"/>
+        <copy file="${build.src}/schemaupdate.sql" tofile="${main.sql}/${release.name}/schemaupdate-production.sql" overwrite="true"/>
+    </target>
+    -->
+    
+    <!--
+    ###########         JBoss      ############################
+    -->
+    <target name="start" description="Starts the application server.">
+        <if>
+            <equals arg1="${rebel.enabled}" arg2="true"/>
+            <then>
+                <exec executable="${jboss.startscript}" spawn="${jboss.spawn}">
+                    <env key="JAVA_OPTS" value="${rebel.java.opts} ${java.opts}"/>
+                    <arg line="-c inventory -b ${jboss.server.host}" />
+                </exec>
+            </then>
+            <else>
+                <exec executable="${jboss.startscript}" spawn="${jboss.spawn}">
+                    <env key="JAVA_OPTS" value="${java.opts}"/>
+                    <arg line="-c inventory -b ${jboss.server.host}" />
+                </exec>
+            </else>
+        </if>
+    </target>
+    <target name="shutdown" description="Stops the application server.">
+        <exec executable="${jboss.stopscript}">
+            <arg line="-S" />
+        </exec>
+    </target>
+
+    <!--
+    ###########         Schema      ############################
+    -->
+    <target name="schemaddl" description="Create a schema ddl that can be run against the database." depends="jar">
+        <hibernatetool destdir="${build.src}">
+            <classpath>
+                <pathelement location="${target.jar}/orm.jar"/>
+                <pathelement location="${target.jar}/util.jar"/>
+                <pathelement location="${lib}/json.jar"/>
+            </classpath>
+            <annotationconfiguration configurationfile="${build.src}/hibernate.cfg.xml"/>
+            <hbm2ddl export="false" haltonerror="true" outputfilename="schema.ddl" />
+        </hibernatetool>
+        <concat destfile="${build.src}/schema.sql">
+            <header filtering="no" trimleading="yes">
+                drop database if exists ${jdbc.db};
+                create database ${jdbc.db} character set utf8;
+                use ${jdbc.db};
+            </header>
+            <footer filtering="no" trimleading="yes"> <!-- admin password is admin   -->
+                insert into user (username, password, active, versionbc) values ('admin','21232f297a57a5a743894a0e4a801fc3', 1, 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'WebUser', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'SystemAdmin', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcInvAdmin', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcInvViewer', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcManifestAdmin', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcManifestViewer', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcRecAdmin', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcRecViewer', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcOrderAdmin', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcOrderViewer', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcCustomerAdmin', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcCustomerViewer', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcVendorAdmin', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcVendorViewer', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcUserAdmin', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BcUserViewer', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BellInvAdmin', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BellInvViewer', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BellRecAdmin', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BellRecViewer', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BellOrderAdmin', 1);
+                insert into userrole (user_id, role, versionbc) values (1, 'BellOrderViewer', 1);
+            </footer>
+            <fileset dir="${build.src}">
+                <include name="schema.ddl"/>
+            </fileset>
+        </concat>
+        <delete file="${build.src}/schema.ddl"/>
+    </target>
+
+    <target name="schemadiff" description="Create a schema difference ddl between current database and current config." depends="clean,jar">
+        <hibernatetool destdir="${build.src}">
+            <classpath>
+                <pathelement location="${target.jar}/orm.jar"/>
+                <pathelement location="${target.jar}/util.jar"/>
+                <pathelement location="${lib}/json.jar"/>
+            </classpath>
+            <annotationconfiguration configurationfile="${build.src}/hibernate.cfg.xml"/>
+            <hbm2ddl export="false" update="true" haltonerror="true" outputfilename="schemaupdate.sql" />
+        </hibernatetool>
+    </target>
+
+    <!-- just used to create pojo's one time use 
+    <target name="schematopojo" description="Create pojo's based on schema." depends="clean,jar">
+        <hibernatetool destdir="${build.src}/generated">
+            <classpath>
+                <pathelement location="${target.jar}/orm.jar"/>
+                <pathelement location="${target.jar}/util.jar"/>
+                <pathelement location="${lib}/json.jar"/>
+                <pathelement path="${main.resources}"/>
+            </classpath>
+            <jdbcconfiguration configurationfile="${build.src}/hibernate.cfg.xml"/>
+            <hbm2java jdk5="true" ejb3="true"/>
+            <hbm2dao />
+            <hbm2ddl/>
+        </hibernatetool>
+    </target>
+    -->
+    
+    <target name="applyschemadiff" description="Create a schema difference ddl between current database and current config and apply it to the database." depends="schemadiff">
+        <sql driver="${jdbc.driver}" password="${jdbc.pass}" url="${jdbc.url}" userid="${jdbc.user}" classpathref="mysqldriverpath" src="${build.src}/schemaupdate.sql"/>
+    </target>
+    
+    <target name="schema" description="Drops / Creates all of the DB tables." depends="jar">
+        <delete dir="${hibernate.search.index}" failonerror="false"/>
+        <mkdir dir="${hibernate.search.index}"/>
+        <sql driver="${jdbc.driver}" password="${jdbc.pass}" url="${jdbc.url.nodb}" userid="${jdbc.user}" classpathref="mysqldriverpath">
+            drop database if exists ${jdbc.db};
+            create database ${jdbc.db} character set utf8;
+        </sql>
+        <hibernatetool destdir="${build.src}">
+            <classpath>
+                <pathelement location="${target.jar}/orm.jar"/>
+                <pathelement location="${target.jar}/util.jar"/>
+                <pathelement location="${lib}/json.jar"/>
+            </classpath>
+            <annotationconfiguration configurationfile="${build.src}/hibernate.cfg.xml"/>
+            <hbm2ddl export="true" haltonerror="true" />
+        </hibernatetool>
+        <sql driver="${jdbc.driver}" password="${jdbc.pass}" url="${jdbc.url}" userid="${jdbc.user}" classpathref="mysqldriverpath">
+            insert into user (username, password, active, versionbc) values ('admin','21232f297a57a5a743894a0e4a801fc3', 1, 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'WebUser', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'SystemAdmin', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcInvAdmin', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcInvViewer', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcManifestAdmin', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcManifestViewer', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcRecAdmin', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcRecViewer', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcOrderAdmin', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcOrderViewer', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcCustomerAdmin', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcCustomerViewer', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcVendorAdmin', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcVendorViewer', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcUserAdmin', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BcUserViewer', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BellInvAdmin', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BellInvViewer', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BellRecAdmin', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BellRecViewer', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BellOrderAdmin', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BellOrderViewer', 1);
+        </sql>
+        
+        <!--
+        <sql driver="${jdbc.driver}" password="${jdbc.pass}" url="${jdbc.url}" userid="${jdbc.user}" classpathref="mysqldriverpath">
+            insert into user (username, password, active, versionbc) values ('admin','21232f297a57a5a743894a0e4a801fc3', 1, 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BCUser', 1);
+            insert into userrole (user_id, role, versionbc) values (1, 'BCAdmin', 1);
+        </sql>
+        -->
+    </target>
+    
+    <target name="schema.update" description="Updates all of the DB tables." depends="jar">
+        <hibernatetool destdir="${build.src}">
+            <classpath>
+                <path refid="hibtoolspath"/>
+                <pathelement location="${target.jar}/orm.jar"/>
+            </classpath>
+            <annotationconfiguration configurationfile="${build.src}/hibernate.cfg.xml"/> 
+            <hbm2ddl export="false" update="true" drop="false" create="false" haltonerror="true"/>
+        </hibernatetool>
+    </target>
+    
+    <!--
+    ###########         Utility targets      ############################
+    -->
+    <target name="unjardeployfile">
+        <move file="${file}" tofile="${file}-orig"/>
+        <delete dir="${file}" failonerror="false"/>
+        <unjar src="${file}-orig" dest="${file}" overwrite="true"/>
+        <delete file="${file}-orig"/>
+    </target>
+    
+    
+    <!--
+    ###########         Dump production / staging / or testing to your local machine      ############################
+    <target name="prodtome" description="Meta - Loads production, applies schema, and runs migration">
+        <runtarget target="loadproduction"/>
+        <runtarget target="applyschemadiff"/>
+        <runtarget target="migration"/>
+    </target>
+    --> 
+
+    <!-- THIS IS TOO BIG, currently 1.2G, gzipped 245M
+    <target name="loadproduction" description="Empties your local database and loads a dump of production data.">
+        <loadData dbName="bookcountry" serverIp="${production.ip}" dbTables="${initial.db.tables}" dbPasswd="power21"/>
+    </target>
+        -->
+    
+    <target name="migrate" description="Migrate production to local">
+        <!-- migrate the tables -->
+        <sql driver="${jdbc.driver}" password="${jdbc.pass}" url="${jdbc.url.nodb}" userid="${jdbc.user}" classpathref="mysqldriverpath">
+            alter table users rename to user;
+            alter table userroles rename to userrole;
+            alter table inventory_item rename to book;
+            create table skid select * from book where skid = 1;
+            alter table customer_order_item add column skid_id int;
+            update customer_order_item as coi, skid as s set coi.skid_id = s.id, coi.inventory_item_id = null where coi.isbn = skid.isbn;
+            <!-- TODO break up customer order and customer order item into old table - pull out old data -->
+            delete from book where skid = 1;
+        </sql>
+    </target>
+    
+    <!--
+    ###########         Amazon web services jar creation using apache axis      ############################
+    -->
+    <target name="amazonwsdl" description="Create java classes from the amazon web services wsdl using axis.">
+        
+        <!-- aws -->
+        <delete dir="${build}/amz" failonerror="false"/>
+        <delete dir="${build}/amzbuild" failonerror="false"/>
+        <java fork="true" maxmemory="256m" classname="org.apache.axis.wsdl.WSDL2Java" classpathref="build.classpath">
+            <arg line="-v -a -W -p com.amazon.xml.AWSECommerceService -o ${build}/amz ${lib.amazon}/AWSECommerceService.wsdl"/>
+            <!--
+            <arg line="-v -a -W -p com.amazon.xml.AWSECommerceService -o ${build}/amz http://webservices.amazon.com/AWSECommerceService/AWSECommerceService.wsdl"/>
+            -->
+        </java>
+        <!-- get rid of giant constructor in ItemAttributes -->
+        <replace file="${build}/amz/com/amazon/xml/AWSECommerceService/ItemAttributes.java" value="/*">
+            <replacetoken><![CDATA[public ItemAttributes(
+           java.lang.String[] actor,]]></replacetoken>
+        </replace>
+        <replace file="${build}/amz/com/amazon/xml/AWSECommerceService/ItemAttributes.java" value="*/">
+            <replacetoken><![CDATA[this.WEEETaxValue = WEEETaxValue;
+           this.wirelessMicrophoneFrequency = wirelessMicrophoneFrequency;
+    }]]></replacetoken>
+        </replace>
+        <mkdir dir="${build}/amzbuild"/>
+        <javac srcdir="${build}/amz" destdir="${build}/amzbuild" optimize="true" classpathref="build.classpath"/>
+        <jar destfile="${lib.amazon}/AWSECommerceService.jar" basedir="${build}/amzbuild" />
+        
+        <!-- turk -->
+        
+        <delete dir="${build}/amz" failonerror="false"/>
+        <delete dir="${build}/amzbuild" failonerror="false"/>
+        <java fork="true" maxmemory="256m" classname="org.apache.axis.wsdl.WSDL2Java" classpathref="build.classpath">
+            <arg line="-v -a -W -p com.amazon.xml.AWSMechanicalTurkRequester -o ${build}/amz http://mechanicalturk.amazonaws.com/AWSMechanicalTurk/AWSMechanicalTurkRequester.wsdl"/>
+        </java>
+        <mkdir dir="${build}/amzbuild"/>
+        <javac srcdir="${build}/amz" destdir="${build}/amzbuild" optimize="true" classpathref="build.classpath"/>
+        <jar destfile="${lib.amazon}/AWSMechanicalTurkRequester.jar" basedir="${build}/amzbuild" />
+        
+        <!-- clean up -->
+        <delete dir="${build}/amz" failonerror="false"/>
+        <delete dir="${build}/amzbuild" failonerror="false"/>
+    </target>
+
+    <!-- temporary target, messing around with lookup -->
+    <target name="amazonlookup" depends="compile">
+        <!-- <java classname="com.bc.amazon.AmazonItemLookupSoap" fork="true"> -->
+        <java classname="com.bc.amazon.TestLookup" fork="true">
+            <classpath>
+                <dirset dir="${build.classes}" />
+                <dirset dir="${main.resources}" />
+                <fileset dir="${jboss.lib}">
+                    <include name="*.jar"/>
+                </fileset>
+            </classpath>
+            <classpath location="${lib.amazon}/resources" />
+        </java>
+    </target>
+    
+    
+    <!--
+    ###########         Java Rebel hot deploy of classes      ############################
+    -->
+    <target name="hotclasses" description="Hotdeploys any changed classes into the exploded ear, needs javarebel to reload." depends="jar">
+        <if>
+            <equals arg1="${explode.deployment}" arg2="true"/>
+            <then>
+                <copy todir="${jboss.container}/server/inventory/deploy/inventory.ear/inventory.war/WEB-INF/classes">
+                    <fileset dir="${build.classes}">
+                        <include name="com/bc/listener/*.class" />
+                        <include name="com/bc/servlet/**" />
+                        <include name="com/bc/struts/**" />
+                        <include name="com/bc/actions/**" />
+                        <exclude name="com/bc/struts/*.class" />
+                    </fileset>
+                </copy>
+                <copy todir="${jboss.container}/server/inventory/deploy/inventory.ear/ejb.jar">
+                    <fileset dir="${build.classes}">
+                        <include name="com/bc/ejb/**" />
+                    </fileset>
+                </copy>
+                <copy todir="${jboss.container}/server/inventory/deploy/inventory.ear/orm.jar">
+                    <fileset dir="${build.classes}">
+                        <include name="com/bc/orm/**" />
+                        <include name="com/bc/dao/**" />
+                    </fileset>
+                </copy>
+                
+                <copy todir="${jboss.container}/server/inventory/deploy/inventory.ear/lib">
+                    <fileset dir="${target.jar}">
+                        <include name="util.jar"/>
+                        <include name="struts.jar"/>
+                        <include name="excel.jar"/>
+                        <include name="table.jar"/>
+                    </fileset>
+                </copy>
+                
+                <copy todir="${jboss.container}/server/inventory/lib">
+                    <fileset dir="${target.jar}">
+                        <include name="amazon.jar" />
+                    </fileset>
+                </copy>
+            </then>
+            <else>
+                <echo message="You do not have an exploded deployment."/>
+            </else>
+        </if>
+    </target>
+
+    <target name="reportgen" description="Compiles the jasper to .jasper files">
+        <delete>
+        	<fileset dir="${main.reports}">
+        	    <include name="*.jasper"/>
+        	</fileset>
+        </delete>
+        <jrc srcdir="${main.reports}" destdir="${main.reports}" tempdir="${java.io.tmpdir}">
+            <include name="*.jrxml"/>
+            <classpath>
+                <fileset dir="${lib.jasper}">
+                    <include name="*.jar"/>
+                </fileset>
+                <fileset dir="${lib.commons}">
+                    <include name="*.jar"/>
+                </fileset>
+            </classpath>
+        </jrc>
+    </target>
+    
+    
+    <target name="sockettest" depends="compile">
+        <property name="sockettest.host" value="localhost"/>
+        <property name="sockettest.pin" value="1024"/>
+        <java classname="com.bc.socketserver.SocketTest" classpathref="build.classpath">
+            <arg line="${sockettest.host} ${sockettest.pin}"/>
+        </java>
+    </target>
+    
+    <target name="breakclient.build" description="Creates the breakclient" depends="clean, compile">
+        <delete dir="${build.break}" failonerror="false"/>
+        <mkdir dir="${build.break}"/>
+        <jar destfile="${build.break}/breakroom.jar" index="true"
+            manifest="${main.resources}/breakroom-manifest.inf">
+            <fileset dir="${build.classes}">
+                <include name="com/bc/breakclient/**/*"/>
+                <include name="com/bc/orm/**/*"/>
+                <include name="com/bc/dao/**/*"/>
+                <include name="com/bc/util/*"/>
+            </fileset>
+            <fileset dir="${main.resources}" includes="log4j.properties"/>
+            <fileset dir="${build.src}" includes="hibernate.cfg.xml"/>            
+        </jar>
+        <exec dir="${build.break}" executable="keytool">
+            <arg line="-delete -storepass password -alias bookcountry"/>
+        </exec>
+        <genkey alias="bookcountry" storepass="password" validity="9999">
+            <dname>
+                <param name="CN" value="Bookcountry Clearing House"/>
+                    <param name="OU" value="Bookcountry Clearing House"/>
+                    <param name="O"  value="Bookcountry Clearing House"/>
+                    <param name="C"  value="US"/>
+            </dname>
+        </genkey>
+        <exec dir="${build.break}" executable="keytool">
+            <arg line="-selfcert -validity 9999 -storepass password -alias bookcountry"/>
+        </exec>
+        <mkdir dir="${build.break}/lib"/>
+        <copy todir="${build.break}/lib">
+            <fileset dir="${lib.hibernate}">
+                <include name="*.jar"/>
+            </fileset>
+            <fileset dir="${lib.jacob}">
+                <include name="*.jar"/>
+            </fileset>
+            <fileset dir="${lib.javamail-nosign}">
+                <include name="*.jar"/>
+            </fileset>
+            <fileset dir="${lib.barbecue}">
+                <include name="*.jar"/>
+            </fileset>
+            <fileset dir="${lib.breakclient}">
+                <include name="*.jar"/>
+            </fileset>
+            <fileset dir="${lib.commons}">
+                <include name="*lang*.jar"/>
+                <include name="*collections*.jar"/>
+                <include name="*logging*.jar"/>
+            </fileset>
+            <fileset dir="${lib}">
+                <include name="mysql*.jar"/>
+                <include name="log4j*.jar"/>
+            </fileset>
+        </copy>
+        <jar destfile="${build.break}/lib/jacobdll.jar">
+            <fileset dir="${lib}/jacob">
+                <include name="*.dll"/>
+            </fileset>
+        </jar>
+        <echo message="Signing breakroom.jar..."/>
+        <exec dir="${build.break}" executable="jarsigner">
+            <arg line="-storepass password breakroom.jar bookcountry"/>
+        </exec>
+        <for param="file">
+            <path>
+                <fileset dir="${build.break}/lib" includes="*"/>
+            </path>
+            <sequential>
+                <echo message="Signing @{file}..."/>
+                <exec dir="${build.break}/lib" executable="jarsigner">
+                    <arg line="-storepass password @{file} bookcountry"/>
+                </exec>
+            </sequential>
+        </for>
+        <mkdir dir="${main}/breakclient/lib"/>
+        <copy file="${build.break}/breakroom.jar" todir="${main}/breakclient" overwrite="true"/>
+        <copy todir="${main}/breakclient/lib" overwrite="true"><fileset dir="${build.break}/lib"><include name="*"/></fileset></copy>
+    </target>
+    
+    <!-- javaws -viewer to see what is currently installed -->
+    <target name="breakclient.run" description="Build and run the break client" depends="breakclient.build">
+        <copy file="${main}/breakclient/web/breakroom.jnlp" todir="${build.break}" filtering="true" overwrite="true" >
+            <filterset><filter token="codebase" value="${breakclient.codebase}"/></filterset>
+        </copy>
+
+        <exec dir="${build.break}" executable="javaws"><arg line="breakroom.jnlp"/></exec>
+    </target>
+    
+</project>

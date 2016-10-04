@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<jnlp-versions>
+    <resource>
+        <pattern>
+            <name>breakroom.jar</name>
+            <version-id>2.0</version-id>
+            <locale>en_US</locale>
+            <locale>en</locale>
+         </pattern>
+         <file>breakroom.jar</file>
+    </resource>
+    <platform>
+        <pattern>
+            <name>JRE</name>
+            <version-id>1.5</version-id>
+            <locale>en_US</locale>
+            <locale>en</locale>
+        </pattern>
+        <file>j2re-1_5.0-us.jnlp</file>
+        <product-version-id>1.5.0</product-version-id>
+    </platform>
+</jnlp-versions>
+

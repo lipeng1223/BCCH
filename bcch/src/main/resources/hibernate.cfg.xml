@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <session-factory>
+    <!-- 
+        <property name="hibernate.show_sql">true</property>    
+        <property name="format_sql">true</property>    
+         -->
+    <property name="hibernate.bytecode.use_reflection_optimizer">true</property>
+    <property name="hibernate.connection.driver_class">@jdbc.driver@</property>
+    <property name="hibernate.connection.url">@jdbc.url@</property>
+    <property name="hibernate.connection.username">@jdbc.user@</property>
+    <property name="hibernate.connection.password">@jdbc.pass@</property>
+    <property name="hibernate.dialect">@jdbc.dialect@</property>
+    <property name="hibernate.connection.zeroDateTimeBehavior">convertToNull</property>
+    <mapping class="com.bc.orm.Audit"/>
+    <mapping class="com.bc.orm.BackStockItem"/>
+    <mapping class="com.bc.orm.BackStockLocation"/>
+    <mapping class="com.bc.orm.BellCost"/>
+    <mapping class="com.bc.orm.BellCustomer"/>
+    <mapping class="com.bc.orm.BellCustomerShipping"/>
+    <mapping class="com.bc.orm.BellInventory"/>
+    <mapping class="com.bc.orm.BellInvoiceNumber"/>
+    <mapping class="com.bc.orm.BellOrder"/>
+    <mapping class="com.bc.orm.BellOrderItem"/>
+    <mapping class="com.bc.orm.BellReceived"/>
+    <mapping class="com.bc.orm.BellReceivedItem"/>
+    <mapping class="com.bc.orm.BellSku"/>
+    <mapping class="com.bc.orm.BellVendor"/>
+    <mapping class="com.bc.orm.BriCount"/>
+    <mapping class="com.bc.orm.BreakReceived"/>
+    <mapping class="com.bc.orm.BreakReceivedItem"/>
+    <mapping class="com.bc.orm.Customer"/>
+    <mapping class="com.bc.orm.CustomerOrder"/>
+    <mapping class="com.bc.orm.CustomerOrderItem"/>
+    <mapping class="com.bc.orm.CustomerShipping"/>
+    <mapping class="com.bc.orm.FastReceivedItem"/>
+    <mapping class="com.bc.orm.InventoryItem"/>
+    <mapping class="com.bc.orm.InvoiceNumber"/>
+    <mapping class="com.bc.orm.Manifest"/>
+    <mapping class="com.bc.orm.ManifestItem"/>
+    <mapping class="com.bc.orm.Publisher"/>
+    <mapping class="com.bc.orm.PublisherImprint"/>
+    <mapping class="com.bc.orm.Received"/>
+    <mapping class="com.bc.orm.ReceivedItem"/>
+    <mapping class="com.bc.orm.UserRole"/>
+    <mapping class="com.bc.orm.User"/>
+    <mapping class="com.bc.orm.Vendor"/>
+    <mapping class="com.bc.orm.VendorSkidType"/>
+  </session-factory>
+</hibernate-configuration>

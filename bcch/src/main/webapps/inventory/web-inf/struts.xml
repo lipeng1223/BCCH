@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+
+<struts>
+    
+    <!-- <constant name="struts.enable.DynamicMethodInvocation" value="false" /> -->
+    
+    <constant name="struts.devMode" value="false"/>
+    <constant name="struts.action.extension" value="bc"/>
+    <constant name="struts.ui.theme" value="simple" />
+    <constant name="struts.multipart.maxSize" value="40000000"/>
+    <constant name="struts.multipart.saveDir" value="/tmp"/>
+    
+    <constant name="struts.convention.action.name.separator" value=""/>
+    <constant name="struts.convention.package.locators" value="actions"/>
+
+    <constant name="struts.ognl.allowStaticMethodAccess" value="true"/>
+    
+    <package name="bcpackage" extends="struts-default">
+
+        <result-types>
+           <result-type name="excelresult" class="com.bc.struts.result.ExcelResult" />
+           <result-type name="jasperresult" class="com.bc.struts.result.JasperResult" />
+           <result-type name="excelfileresult" class="com.bc.struts.result.ExcelFileResult" />
+        </result-types>
+    
+        <interceptors>
+            <interceptor name="bcRoles" class="com.bc.struts.interceptor.RolesInterceptor"/>
+            <interceptor name="export" class="com.bc.struts.interceptor.ExcelExportInterceptor"/>
+            <interceptor name="noCache" class="com.bc.struts.interceptor.NoCacheInterceptor"/>
+            <interceptor name="bcEncoding" class="com.bc.struts.interceptor.EncodingInterceptor"/>
+            <interceptor name="bcContext" class="com.bc.struts.interceptor.ContextInterceptor"/>
+            <interceptor name="bcLogin" class="com.bc.struts.interceptor.LoginInterceptor"/>
+            
+            <interceptor-stack name="bcStack">
+                <interceptor-ref name="bcEncoding"/>
+                <interceptor-ref name="noCache"/>
+                <interceptor-ref name="bcLogin"/>
+                <interceptor-ref name="bcRoles"/>
+                <interceptor-ref name="bcContext"/>
+                <interceptor-ref name="export"/>
+                <interceptor-ref name="defaultStack"/>
+            </interceptor-stack>
+        </interceptors>
+
+        <default-interceptor-ref name="bcStack"/>
+
+        <global-results>
+            <result name="error">/WEB-INF/jsp/error.jsp</result>
+            <result name="input">/WEB-INF/jsp/inputerror.jsp</result>
+            <result name="login">/WEB-INF/jsp/login.jsp</result>
+            <result name="403">/WEB-INF/jsp/403.jsp</result>
+            <result name="404">/WEB-INF/jsp/404.jsp</result>
+            <result name="home" type="redirectAction">/secure/home.bc</result>
+            <result name="jasperreport" type="jasperresult"></result>
+            <result name="excelreport" type="excelresult"></result>
+            <result name="excelfilereport" type="excelfileresult"></result>
+        </global-results>
+
+        <global-exception-mappings>
+            <exception-mapping exception="java.lang.Throwable" result="error"/>
+        </global-exception-mappings>
+
+    </package>
+</struts>

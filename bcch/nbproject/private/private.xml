@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/1"/>
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="3">
+        <file>
+            <url>src/main/java/com/bc/actions/bookcountry/InventoryItemAction.java</url>
+            <bookmark id="1">
+                <name/>
+                <line>0</line>
+                <key/>
+            </bookmark>
+            <bookmark id="2">
+                <name/>
+                <line>0</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/main/java/com/bc/actions/bookcountry/OrderAction.java</url>
+            <bookmark id="3">
+                <name/>
+                <line>950</line>
+                <key/>
+            </bookmark>
+        </file>
+    </editor-bookmarks>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/D:/Web%20Dev/BCCH/bcch/src/main/java/com/bc/amazon/HmacSecurityHandler.java</file>
+            <file>file:/D:/Web%20Dev/BCCH/bcch/src/main/java/com/bc/amazon/AmazonData.java</file>
+        </group>
+    </open-files>
+</project-private>

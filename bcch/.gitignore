@@ -1,0 +1,6 @@
+.svn/*
+build/*
+cachestore/*
+nbbuild/*
+target/*
+/dist/

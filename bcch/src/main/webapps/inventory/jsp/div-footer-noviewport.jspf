@@ -1,0 +1,11 @@
+<%-- custom footer for login --%>
+<div class="invfootermargin"></div>
+<div id="invfooter" style="margin-top:5px;font-size:.7em;font-family: Helvetica, Arial, Verdana, Sans-Serif;color: #555;">
+<center>
+&copy; 2009-2012 Bookcountry Clearing House Inc.
+<span style="margin-left:25px;"></span>
+Inventory
+<span style="margin-left:25px;"></span>
+Version: @app.version@
+</center>
+</div>

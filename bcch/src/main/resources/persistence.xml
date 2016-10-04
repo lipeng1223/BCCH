@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence>
+    <persistence-unit name="InventoryPersistence">
+        <jta-data-source>java:/inventoryDS</jta-data-source>
+        <properties>
+            <property name="hibernate.dialect" value="@jdbc.dialect@"/>
+            <property name="jboss.entity.manager.jndi.name" value="java:/InventoryPersistence"/>
+            <property name="jboss.entity.manager.factory.jndi.name" value="java:/InventoryPersistenceFactory"/>
+
+            <!--            
+            <property name="hibernate.ejb.interceptor" value="com.bc.orm.AuditInterceptor"/>
+            -->
+            
+            <!-- search 
+            <property name="hibernate.search.default.directory_provider" value="org.hibernate.search.store.FSDirectoryProvider"/>
+            <property name="hibernate.search.default.indexBase" value="@hibernate.search.index@"/>
+            <property name="hibernate.search.worker.execution" value="async"/>
+            <property name="hibernate.search.default.optimizer.operation_limit.max" value="100"/>
+            <property name="hibernate.search.default.optimizer.transaction_limit.max" value="100"/>
+            -->
+            
+        </properties>
+    </persistence-unit>
+</persistence>

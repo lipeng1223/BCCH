@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<jboss-app>
+    <loader-repository>ejb3:loader=inventory</loader-repository>
+    <module>
+        <service>inventory-ds.xml</service>
+    </module>
+    <module>
+        <ejb>orm.jar</ejb>
+    </module>
+    <module>
+        <ejb>ejb.jar</ejb>
+    </module>
+    <library-directory>lib</library-directory>
+</jboss-app>

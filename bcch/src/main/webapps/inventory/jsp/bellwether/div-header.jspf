@@ -1,0 +1,34 @@
+<span id="headerfilllerspan"></span><%-- This is necessary for IE and EXT for some reason --%>
+<div style="display:none">
+<!-- 
+<span id="headersearchspan">
+    <form action="search.fi" method="post" name="menuSearchForm" id="menuSearchForm">
+    <span style="color:#ddd;margin-right:5px;">
+    <input type="text" name="searchString" id="menuSearchInput" maxlength="255" size="20" value="search..." class="text-input-smaller hint" onfocus="if (this.className=='text-input-smaller hint') { this.className = 'text-input-larger'; this.value = ''; }"  onblur="if (this.value == '') { this.className = 'text-input-smaller hint'; this.value = 'search...';}" onkeypress="return menuSearchKeyCheck(event);"/> 
+    <a href="javascript:menuSearchSubmit();"><img src="/images/zoom.png" alt="search" align="bottom" border="0"/></a>
+    <input type="submit" style="width: 0px; height: 0px; position: absolute; left: -50px; top: -50px;"/>
+    </span>
+    </form>
+</span>
+ -->
+ <span id="logotextspan" style="padding-left:10px;padding-right:5px;font-size:14px;color:#567abd;">Book Country Clearing House</span>
+ <span id="bellinvtext" style="padding-left:5px;padding-right:18px;font-size:14px;font-weight:bold;color:#424242;"><img src="/images/book.png"/> Bellwether Inventory</span>
+<!-- <span id="invlogospan" style="padding-left:10px;padding-right:5px;"><img src="/images/headerfav.png" border="0" align="top"/></span>  -->
+<span id="logoutspan" style="padding-left:5px;padding-right:5px;"><a href="/logoff.bc" title="Log out of the system">logoff</a></span>
+<div id="toolbarmenu"></div>
+<div id="quicksearchmenudiv" style="width:100%;height:30px;background:#efefef;">
+    <form action="/secure/bellwether/quicksearch!quickSearch.bc">
+    <span style="float:right;color:#777;">
+    quick search: <input type="text" style="width:300px;margin-top:5px;margin-right:8px;" name="quickSearch" id="quickSearchText" value="<s:property value="quickSearch"/>"/>
+    <select name="quickSearchLocation" style="margin-right:10px;">
+        <option <s:if test="quickSearchLocation == 'inventory'">selected</s:if>>inventory</option>
+        <option <s:if test="quickSearchLocation == 'orders'">selected</s:if>>orders</option>
+        <option <s:if test="quickSearchLocation == 'receiving'">selected</s:if>>receiving</option>
+        <option <s:if test="quickSearchLocation == 'customers'">selected</s:if>>customers</option>
+        <option <s:if test="quickSearchLocation == 'vendors'">selected</s:if>>vendors</option>
+    </select>
+    <input type="submit" style="margin-right:25px;" value="search"/>
+    </span>
+    </form>
+</div>
+</div>

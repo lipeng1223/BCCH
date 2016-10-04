@@ -1,0 +1,19 @@
+<span id="headerfilllerspan"></span><%-- This is necessary for IE and EXT for some reason --%>
+<div style="display:none">
+<!-- 
+<span id="headersearchspan">
+    <form action="search.fi" method="post" name="menuSearchForm" id="menuSearchForm">
+    <span style="color:#ddd;margin-right:5px;">
+    <input type="text" name="searchString" id="menuSearchInput" maxlength="255" size="20" value="search..." class="text-input-smaller hint" onfocus="if (this.className=='text-input-smaller hint') { this.className = 'text-input-larger'; this.value = ''; }"  onblur="if (this.value == '') { this.className = 'text-input-smaller hint'; this.value = 'search...';}" onkeypress="return menuSearchKeyCheck(event);"/> 
+    <a href="javascript:menuSearchSubmit();"><img src="/images/zoom.png" alt="search" align="bottom" border="0"/></a>
+    <input type="submit" style="width: 0px; height: 0px; position: absolute; left: -50px; top: -50px;"/>
+    </span>
+    </form>
+</span>
+ -->
+ <span id="logotextspan" style="padding-left:15px;padding-right:20px;font-size:14px;font-weight:bold;color:#424242;">Book Country Clearing House</span>
+ 
+<!-- <span id="invlogospan" style="padding-left:10px;padding-right:5px;"><img src="/images/headerfav.png" border="0" align="top"/></span>  -->
+<span id="logoutspan" style="padding-left:5px;padding-right:5px;"><a href="/logoff.bc" title="Log out of the system">logoff</a></span>
+<div id="toolbarmenu"></div>
+</div>

@@ -1,0 +1,27 @@
+<deployment xmlns="http://xml.apache.org/axis/wsdd/"
+	xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+	<transport name="http"
+		pivot="java:org.apache.axis.transport.http.HTTPSender" />
+	<globalConfiguration>
+    
+		<requestFlow>
+			<handler type="java:org.apache.axis.message.addressing.handler.AddressingHandler" />
+
+			<handler type="java:org.apache.ws.axis.security.WSDoAllSender">
+				<parameter name="action" value="Timestamp Signature" />
+				
+				<parameter name="signaturePropFile" value="amazon_certificate.properties" />
+				
+				<parameter name="signatureKeyIdentifier" value="DirectReference" />
+				
+				<parameter name="user" value="tm-amazon-cert" />
+				
+				<parameter name="passwordCallbackClass" value="com.bc.amazon.PasswordCallback" />
+			</handler>
+		</requestFlow>
+
+		<!-- The AddressingHandler above will not send the ReplyTo header unless explicitly configured.
+			 Without this, Amazon will reject the request -->
+		<parameter name="addressing.sendReplyTo" value="true" />
+	</globalConfiguration>
+</deployment>

@@ -1,0 +1,21 @@
+<span style="display:none">
+<div id="invfooter" class="bcfooter" style="margin-top:5px;">
+    <div style="margin-left:auto;margin-right:auto;width:100%;">
+    
+    <center>
+    &copy; 2009-2015 Bookcountry Clearing House Inc.
+    <span style="margin-left:25px;">
+    Inventory Management System
+    </span>
+    <span style="margin-left:25px;">
+    Version: @app.build@
+    </span>
+    
+    </center>
+    
+    </div>
+</div>
+</span>
+<!--
+Server Page Create Time (Millis): <%=(System.currentTimeMillis() - beginPageLoadTime)%>
+-->

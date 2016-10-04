@@ -1,0 +1,68 @@
+<%-- START state management --%>
+<%--
+    
+    Be sure to set the variable stateSession
+    
+    <s:set name="stateSession" value="%{'results-list-state'}"/>
+    <%@ include file="../statemanagement.jspf" %>
+
+    This must be included in any pages that need state management
+    You must the session variable to a page specific value like 'result-list', 'item-list', 'user-list' etc
+    You must also provide that session variable as a param to the StateManager.readState method
+
+ --%>
+<% if (request.getUserPrincipal() != null) { %>
+<s:set name="reqStateSession" value="#stateSession" scope="request"/>
+<script type="text/javascript">
+Ext.state.Manager.setProvider(new Ext.ux.state.HttpProvider({
+   session:'<s:property value="#stateSession"/>',
+   url:'/secure/state',
+   delay:1000, // buffer state changes for 1 second
+   user:'<%= request.getUserPrincipal().getName() %>',
+   id:'<%= session.getAttribute("userId") %>',
+   readBaseParams:{cmd:'readState'},
+   saveBaseParams:{cmd:'saveState'},
+   autoRead:false
+}));
+<%-- provide the base read into this --%>
+Ext.state.Manager.getProvider().initState(<%= com.bc.util.StateManager.readState((Long)session.getAttribute("userId"), (String)request.getAttribute("reqStateSession")) %>);
+<%-- Ext.state.Manager.getProvider().initState([{"name":"client-mod-client-grid","value":"..."},{"name":"client-mod-win","value":"..."}]); --%>
+
+
+function resetGridState(tableName){
+    Ext.MessageBox.confirm('Confirm', 'Are you sure you want to reset this grid back to it\'s original default configuration?', function(btn){
+        if (btn == "yes"){
+            Ext.Ajax.request({
+                method: 'post',
+                url: '/secure/state?cmd=removeState&id=<%= session.getAttribute("userId") %>&session=<s:property value="#stateSession"/>&tableName='+tableName,
+                success: function(){
+                    // reload the page
+                    var url = document.location.href;
+                    var idx = url.indexOf("create=true");
+                    var gourl = url;
+                    if (idx > 0){
+                        gourl = url.substring(0, idx);
+                        if (url.length > idx + "create=true".length){
+                            gourl += url.substring("create=true".length + idx);
+                        }
+                    }
+                    
+                    idx = gourl.indexOf("filterId");
+                    if (idx > 0){
+                        gourl = gourl.substring(0, gourl.indexOf("?"));
+                    }
+                    
+                    window.location = gourl;
+                },
+                failure: function(){
+                    // could not remove state
+                    Ext.Msg.alert('Error', 'Could not reset the Grid to the defaults.');
+                }
+            });    
+        }
+    });
+}
+
+</script>
+<% } %>
+<%-- END state management --%>

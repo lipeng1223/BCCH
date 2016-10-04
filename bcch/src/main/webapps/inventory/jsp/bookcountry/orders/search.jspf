@@ -1,0 +1,54 @@
+            <table id="<s:property value="#orderSearchPrefix"/>searchTable">
+                <tr id="<s:property value="#orderSearchPrefix"/>searchRow0" style="margin-bottom:5px;">
+                    <td align="right">
+                        <s:if test="%{search == null || search.names == null || search.names[0] == null}">
+                            <s:select name="search.names" list="#searchNames" value="%{'invoiceNumber'}"/>
+                        </s:if><s:else>
+                            <s:select name="search.names" list="#searchNames" value="%{search.names[0]}"/>
+                        </s:else>
+                    </td>
+                    <td style="padding-left:10px"><s:select name="search.modifiers"
+                         list="#{'EQUALS':'Equals', 'LIKE':'Is Like', 'NOT_LIKE':'Not Like', 'NOT_EQUAL':'Not Equal', 'BEGINS_WITH':'Begins With', 'ENDS_WITH':'Ends With', 'GT':'Greater Than', 'LT':'Less Than', 'GTE':'Greater Than Or Equal To', 'LTE':'Less Than Or Equal To'}"
+                         value="%{search.modifiers[0]}"/>
+                     </td>
+                    <td style="padding-left:10px;"><s:if test="search.names.length > 0"><s:textfield key="search.values" id="%{#orderSearchPrefix + 'searchval0'}" value="%{search.values[0]}"/></s:if><s:else><s:textfield key="search.values" id="%{#orderSearchPrefix + 'searchval0'}"/></s:else></td>
+                    <td style="padding-left:10px;"><a href="#" onclick="javascript:searchDateSelect('<s:property value="#orderSearchPrefix"/>searchval0');return false;" title="Select Date"><img src="/images/calendar.png" align="top"/></a></td>
+                </tr>
+                
+                <s:iterator value="search.names" var="n" status="st">
+                    <s:if test="#st.index > 0">
+                        <tr id="<s:property value="#orderSearchPrefix"/>-andOr-<s:property value="#st.index"/>"><td>
+                            <s:select name="search.andOrs" list="#{'AND':'And', 'OR':'Or'}"
+                                      value="%{search.andOrs[#st.index - 1]}"/>
+                        </td></tr>
+                        <tr id="<s:property value="#orderSearchPrefix"/>searchRow<s:property value="#st.index"/>" style="margin-bottom:5px;">
+                            <td align="right">
+                                <s:select name="search.names" list="#searchNames"
+                                          value="%{search.names[#st.index]}"/>
+                            </td>
+                            <td style="padding-left:10px"><s:select name="search.modifiers"
+                         list="#{'EQUALS':'Equals', 'LIKE':'Is Like', 'NOT_LIKE':'Not Like', 'NOT_EQUAL':'Not Equal', 'BEGINS_WITH':'Begins With', 'ENDS_WITH':'Ends With', 'GT':'Greater Than', 'LT':'Less Than', 'GTE':'Greater Than Or Equal To', 'LTE':'Less Than Or Equal To'}"
+                                 value="%{search.modifiers[#st.index]}"/>
+                             </td>
+                            <td style="padding-left:10px;"><s:textfield key="search.values" id="%{#orderSearchPrefix + 'searchval'+ #st.index}" value="%{search.values[#st.index]}"/></td>
+                            <td style="padding-left:10px;"><a href="#" onclick="javascript:searchDateSelect('<s:property value="#orderSearchPrefix"/>searchval<s:property value="#st.index"/>');return false;" title="Select Date"><img src="/images/calendar.png" align="top"/></a></td>
+                            <s:if test="#st.index > 0">
+                            <td>
+                            <div style="padding-left:5px;"><a href="" onclick="javascript:deleteSearchRow('<s:property value="#orderSearchPrefix"/>', '<s:property value="#st.index"/>');return false;"><img src="/images/delete.png" title="Remove Search Criteria"/></a></div>
+                            </td>
+                            </s:if>
+                        </tr>
+                    </s:if>
+                </s:iterator>                
+            </table>
+            
+            <table style="width:600px;">
+            <tr><td><div style="height:8px;"></div></td></tr>
+            <tr>
+                <td align="left"><a href="" onclick="javascript:addSearchRow('<s:property value="#orderSearchPrefix"/>');return false;"><img src="/images/add.png" title="Add Search Criteria"/></a></td>
+            </tr>
+            <tr>
+                <td align="right" colspan="3"><div id="orderSearchSubmit"></div></td>
+            </tr>
+            </table>            
+

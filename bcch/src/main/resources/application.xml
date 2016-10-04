@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application>
+   <display-name>inventory</display-name>
+   <description>Inventory EAR</description>
+
+   <!-- WebApp -->
+   <module>
+      <web>
+         <web-uri>inventory.war</web-uri>
+         <context-root>/</context-root>
+      </web>
+   </module>
+</application>

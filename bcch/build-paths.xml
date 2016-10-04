@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="paths">
+
+    <path id="build.classpath">
+        <dirset dir="${build.classes}" />
+        <fileset dir="${jboss.lib}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${jboss.jbosswebdeployer}">
+            <include name="jbossweb.jar"/>
+        </fileset>
+        <fileset dir="${jboss.ejbdeployer.lib}">
+            <include name="jboss-annotations-ejb3.jar"/>
+        </fileset>
+        <fileset dir="${lib}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib.commons}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib.struts}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib.jxl}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib.amazon}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib.jasper}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib.jacob}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib.barbecue}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib.ehcache}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib.breakclient}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib.poi}">
+            <include name="*.jar"/>
+        </fileset>
+    </path> 
+
+    <path id="hibtoolspath">
+        <fileset dir="${lib.hibernatetools}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib.commons}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib}">
+            <include name="mysql*.jar"/>
+            <include name="log4j*.jar"/>
+        </fileset>
+    </path>
+	
+	<path id="mysqldriverpath">
+        <fileset dir="${lib}">
+            <include name="mysql*.jar"/>
+        </fileset>
+    </path>
+    
+</project>

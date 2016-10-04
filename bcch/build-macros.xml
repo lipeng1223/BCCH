@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="macros">
+
+    <macrodef name="loadData" description="Empties your local database and loads a dump from testing, staging or prod.">
+        <attribute name="dbName" default="bookcountry" description="Remote Database name to dump"/>
+        <attribute name="dbUser" default="root" description="Remote Database user name"/>
+        <attribute name="dbPasswd" default="" description="Remote Database password"/>
+        <attribute name="dbTables" default="" description="Remote Database tables to dump"/>
+        <attribute name="serverIp" default="${production.ip}" description="IP Address of remote server"/>
+        <attribute name="remoteDump" default="dump.sql" description="Name of the remove dump file"/>
+        <sequential>
+                <if>
+                    <equals arg1="${no.ant.gui}" arg2="true"/>
+                    <then>
+                        <input addproperty="ssh.jboss.pass" message="Enter the jboss users password:"/>
+                    </then>
+                    <else>
+                        <query name="ssh.jboss.pass" message="Enter the jboss users password:" password="true"/>
+                    </else>
+                </if>
+                <!-- database -->
+                <echo message="Dumping @{dbName} to dump.sql..."/>
+                <exec executable="expect">
+                    <arg line="-f src/main/resources/ssh-pass.exp ${ssh.jboss.pass} ssh megela@@@{serverIp} mysqldump -h localhost -u @{dbUser} --password=@{dbPasswd} @{dbName} @{dbTables} > @{remoteDump}"/>
+                </exec>
+                <echo message="Finished @{dbName} database dump."/>
+                <echo message="Getting the dump file..."/>
+                <exec executable="expect">
+                    <arg line="-f src/main/resources/scp-pass.exp ${ssh.jboss.pass} scp megela@@@{serverIp}:@{remoteDump} ."/>
+                </exec>
+                <echo message="Finished getting the dump file."/>
+                <echo message="Loading the dump file..."/>
+                <sql driver="${jdbc.driver}" password="${jdbc.pass}" url="${jdbc.url.nodb}" userid="${jdbc.user}" classpathref="mysqldriverpath">
+                    drop database if exists ${jdbc.db};
+                    create database ${jdbc.db} character set utf8;
+                </sql>
+                <echo message="Loading the dump file, this can take a while..."/>
+                <!-- Unix only, needed for production dumps -->
+                <exec executable="/bin/sh"><arg line='-c "mysql -h ${jdbc.host} -u ${jdbc.user} --password=${jdbc.pass} ${jdbc.db} &lt; @{remoteDump}"'/></exec>
+                <!-- 
+                <sql driver="${jdbc.driver}" password="${jdbc.pass}" url="${jdbc.url}" userid="${jdbc.user}" classpathref="mysqldriverpath">
+                    <transaction src="@{remoteDump}"/>
+                </sql>
+                -->
+                <echo message="Finished load of the dump file"/>
+                <delete file="@{remoteDump}"/>
+        </sequential>
+    </macrodef>
+
+</project>

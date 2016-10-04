@@ -1,0 +1,133 @@
+    Ext.QuickTips.init();
+    var tb = new Ext.Toolbar({
+        //style: 'background:transparent;border-color:transparent'
+        //style: 'background:#F0F4F5 url(/images/tbbg2.png) repeat-x scroll left top'
+    });
+    tb.render('toolbarmenu');
+    
+    tb.addElement("logotextspan");
+    
+    tb.addSpacer();
+    tb.addSpacer();
+    tb.addSpacer();
+    tb.addSpacer();
+    tb.addSeparator();
+    tb.addSpacer();
+    tb.addSpacer();
+    <s:if test="isBcCapable">
+    tb.add(
+    {
+        text:'Book Country Inventory',
+        id: 'bookInvMenu',
+        iconCls: 'book_icon',
+        handler: function(){
+            interPageMove('/secure/bookcountry/home.bc');
+        }
+    });
+    tb.addSpacer();
+    tb.addSpacer();
+    tb.addSeparator();
+    </s:if>
+    tb.addSpacer();
+    tb.addSpacer();
+    <s:if test="isBellCapable">
+    tb.add(
+    {
+        text:'Bellwether Inventory',
+        id: 'bellInvMenu',
+        iconCls: 'book_icon',
+        handler: function(){
+            interPageMove('/secure/bellwether/home.bc');
+        }
+    }
+    );
+    </s:if>
+
+    <s:if test="isBcUserAdmin || isBcUserViewer">    
+    tb.addSpacer();
+    tb.addSpacer();
+    tb.addSeparator();
+    tb.add({
+        <s:if test="#activeMenu == 'users'">ctCls: 'activeMenu',</s:if>
+        text: 'Users',
+        iconCls: 'user_icon',
+        handler: function(){
+            interPageMove('/secure/bookcountry/user!list.bc');
+        }
+    });
+    </s:if>
+    
+    <s:if test="isSystemAdmin">    
+    var mainToolsMenu = new Ext.menu.Menu({
+        id: 'mainToolsMenu',
+        items: [
+            {
+                iconCls: 'plugin_icon',
+                text: 'System Logs',
+                handler: function(){
+                    mainToolsMenu.hide();
+                    interPageMove('/secure/logview.bc');
+                }
+            },
+            {
+                iconCls: 'plugin_icon',
+                text: 'System Memory',
+                handler: function(){
+                    mainToolsMenu.hide();
+                    interPageMove('/secure/system!jbossMemory.bc');
+                }
+            },
+            {
+                iconCls: 'plugin_icon',
+                text: 'System Web Status',
+                handler: function(){
+                    mainToolsMenu.hide();
+                    interPageMove('/secure/system!tomcatStatus.bc');
+                }
+            }
+        ]
+    });
+    
+    tb.addSpacer();
+    tb.addSpacer();
+    tb.addSeparator();
+    tb.add({
+        iconCls: 'plugin_icon',
+        <s:if test="#activeMenu == 'system'">ctCls: 'activeMenu',</s:if>
+        menu: mainToolsMenu,
+        text: 'System'
+    });
+    </s:if>
+    
+    tb.addSeparator();
+    tb.add({
+        text: 'Break Client',
+        iconCls: 'breakclient_icon',
+        handler: function(){
+            document.location="/breakclient/breakroom.jnlp";
+        }
+    });
+    
+    tb.addFill();
+    tb.addSpacer();
+    tb.addText("user: <% if (request.getUserPrincipal().getName().length() > 50){ %><%= request.getUserPrincipal().getName().substring(0, 50) %>... <% } else { %><%= request.getUserPrincipal().getName() %><% } %>");
+    tb.addSpacer();
+    tb.addSeparator();
+    tb.addElement("logoutspan");
+    tb.addSpacer();
+    tb.addSeparator();
+    tb.addSpacer();
+    tb.addSpacer();
+    
+    <!-- This is to fix the icon offset in menu drop downs in IE6 -->    
+    if (Ext.isIE6){
+        if (document.styleSheets[document.styleSheets.length-1].rules) {
+            document.styleSheets[document.styleSheets.length-1].addRule(".x-menu-item-icon", "background-position:center left;left:-25px;"); 
+        }
+    }
+
+    
+    <s:if test="search != null && search.names != null && search.names.length > 0">
+    searchRowNum += <s:property value="search.names.length"/>;
+    </s:if>
+    
